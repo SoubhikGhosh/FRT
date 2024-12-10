@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webcam Capture</title>
+    <style>
+        #video {
+            width: 100%;
+            max-width: 640px;
+            border: 1px solid black;
+        }
+        #canvas {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Webcam Capture</h1>
+    <video id="video" autoplay></video>
+    <button id="capture">Capture</button>
+    <input type="text" id="name" placeholder="Enter name">
+    <p id="status"></p>
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const captureButton = document.getElementById('capture');
+        const nameInput = document.getElementById('name');
+        const status = document.getElementById('status');
+
+        // Access the user's webcam
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+            })
+            .catch(error => {
+                console.error("Error accessing webcam:", error);
+            });
+
+        // Capture the image and send it to the server
+        captureButton.addEventListener('click', () => {
+            const name = nameInput.value.trim();
+            if (!name) {
+                status.textContent = "Please enter a name.";
+                return;
+            }
+
+            // Draw the video frame to the canvas
+            const context = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Get the image data as Base64
+            const imageData = canvas.toDataURL('image/jpeg');
+
+            // Send the image to the server
+            fetch('/capture', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: name, image: imageData })
+            })
+            .then(response => response.json())
+            .then(data => {
+                status.textContent = data.message;
+            })
+            .catch(error => {
+                console.error("Error saving image:", error);
+                status.textContent = "Failed to save image.";
+            });
+        });
+    </script>
+</body>
+</html>
