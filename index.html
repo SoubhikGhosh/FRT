@@ -1,76 +1,216 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Webcam Capture</title>
     <style>
-        #video {
-            width: 100%;
-            max-width: 640px;
-            border: 1px solid black;
+      /* Global Styles */
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #ff1a76, #0041b0);
+        background-size: 200% 200%; /* Allows the gradient to move */
+        animation: gradientAnimation 4s infinite alternate; /* Animation details */
+        color: #fff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      /* Define the gradient animation */
+      @keyframes gradientAnimation {
+        0% {
+          background-position: 0% 50%;
         }
-        #canvas {
-            display: none;
+        50% {
+          background-position: 100% 50%;
         }
+        100% {
+          background-position: 0% 50%;
+        }
+      }
+
+      /* Center Container */
+      .container {
+        text-align: center;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.5);
+        max-width: 90%;
+        width: 400px;
+      }
+
+      h1 {
+        font-size: 1.8rem;
+        margin-bottom: 20px;
+      }
+
+      #video {
+        width: 100%;
+        max-width: 360px;
+        border: 3px solid #fff;
+        border-radius: 10px;
+        margin-bottom: 20px;
+      }
+
+      input[type="text"] {
+        width: 100%;
+        max-width: 360px;
+        padding: 10px;
+        margin: 10px 0 30px 0;
+        border: none;
+        border-radius: 5px;
+        outline: none;
+        font-size: 1rem;
+      }
+
+      button {
+        font-size: 17px;
+        padding: 1em 2.7em;
+        font-weight: 500;
+        background: #ff7f7f;
+        color: rgb(255, 249, 249);
+        border: none;
+        position: relative;
+        overflow: hidden;
+        border-radius: 0.6em;
+        cursor: pointer;
+      }
+
+      .gradient {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        left: 0;
+        top: 0;
+        border-radius: 0.6em;
+        margin-top: -0.25em;
+        background-image: linear-gradient(
+          rgba(0, 0, 0, 0),
+          rgba(0, 0, 0, 0),
+          rgba(0, 0, 0, 0.3)
+        );
+      }
+
+      .label {
+        position: relative;
+        top: -1px;
+      }
+
+      .transition {
+        transition-timing-function: cubic-bezier(0, 0, 0.2, 1);
+        transition-duration: 500ms;
+        background-color: rgba(16, 78, 185, 0.6);
+        border-radius: 9999px;
+        width: 0;
+        height: 0;
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+      }
+
+      button:hover .transition {
+        width: 14em;
+        height: 14em;
+      }
+
+      button:active {
+        transform: scale(0.97);
+      }
+
+      #status {
+        margin-top: 15px;
+        font-size: 1rem;
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        h1 {
+          font-size: 1.5rem;
+        }
+
+        button,
+        input[type="text"] {
+          font-size: 0.9rem;
+        }
+      }
+
+      #canvas {
+        display: none;
+      }
     </style>
-</head>
-<body>
-    <h1>Webcam Capture</h1>
-    <video id="video" autoplay></video>
-    <button id="capture">Capture</button>
-    <input type="text" id="name" placeholder="Enter name">
-    <p id="status"></p>
-    <canvas id="canvas"></canvas>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Webcam Capture</h1>
+      <video id="video" autoplay></video>
+      <input type="text" id="name" placeholder="Enter name" />
+
+      <button id="capture">
+        <span class="transition"></span>
+        <span class="gradient"></span>
+        <span class="label">Capture</span>
+      </button>
+
+      <p id="status"></p>
+      <canvas id="canvas"></canvas>
+    </div>
 
     <script>
-        const video = document.getElementById('video');
-        const canvas = document.getElementById('canvas');
-        const captureButton = document.getElementById('capture');
-        const nameInput = document.getElementById('name');
-        const status = document.getElementById('status');
+      const video = document.getElementById("video");
+      const canvas = document.getElementById("canvas");
+      const captureButton = document.getElementById("capture");
+      const nameInput = document.getElementById("name");
+      const status = document.getElementById("status");
 
-        // Access the user's webcam
-        navigator.mediaDevices.getUserMedia({ video: true })
-            .then(stream => {
-                video.srcObject = stream;
-            })
-            .catch(error => {
-                console.error("Error accessing webcam:", error);
-            });
-
-        // Capture the image and send it to the server
-        captureButton.addEventListener('click', () => {
-            const name = nameInput.value.trim();
-            if (!name) {
-                status.textContent = "Please enter a name.";
-                return;
-            }
-
-            // Draw the video frame to the canvas
-            const context = canvas.getContext('2d');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-            // Get the image data as Base64
-            const imageData = canvas.toDataURL('image/jpeg');
-
-            // Send the image to the server
-            fetch('/capture', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: name, image: imageData })
-            })
-            .then(response => response.json())
-            .then(data => {
-                status.textContent = data.message;
-            })
-            .catch(error => {
-                console.error("Error saving image:", error);
-                status.textContent = "Failed to save image.";
-            });
+      // Access the user's webcam
+      navigator.mediaDevices
+        .getUserMedia({ video: true })
+        .then((stream) => {
+          video.srcObject = stream;
+        })
+        .catch((error) => {
+          console.error("Error accessing webcam:", error);
         });
+
+      // Capture the image and send it to the server
+      captureButton.addEventListener("click", () => {
+        const name = nameInput.value.trim();
+        if (!name) {
+          status.textContent = "Please enter a name.";
+          return;
+        }
+
+        // Draw the video frame to the canvas
+        const context = canvas.getContext("2d");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        // Get the image data as Base64
+        const imageData = canvas.toDataURL("image/jpeg");
+
+        // Send the image to the server
+        fetch("/capture", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: name, image: imageData }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            status.textContent = data.message;
+          })
+          .catch((error) => {
+            console.error("Error saving image:", error);
+            status.textContent = "Failed to save image.";
+          });
+      });
     </script>
-</body>
+  </body>
 </html>
