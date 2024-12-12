@@ -9,7 +9,7 @@ def index():
     return send_from_directory('.', 'index.html')
 
 # Directory to save captured images
-SAVE_DIR = "captured_images"
+SAVE_DIR = "../FRT_Recognition/known_faces"
 os.makedirs(SAVE_DIR, exist_ok=True)
 
 @app.route('/capture', methods=['POST'])
