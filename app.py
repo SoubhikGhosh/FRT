@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify, send_from_directory
+from flask_cors import CORS, cross_origin
 import os
 import base64
 
@@ -13,6 +14,7 @@ SAVE_DIR = "../FRT_Recognition/known_faces"
 os.makedirs(SAVE_DIR, exist_ok=True)
 
 @app.route('/capture', methods=['POST'])
+@cross_origin(origins=['http://localhost:3000'])
 def capture_image():
     data = request.json
     if not data or 'name' not in data or 'image' not in data:
